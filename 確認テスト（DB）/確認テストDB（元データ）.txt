@@ -1,0 +1,106 @@
+
+問1　小学生を対象とした開催イベントを管理する関係データベースに関する次の説明文中の空欄に入れる適切な字句を答えよ。
+
+
+設問１ 以下の属性をもつテーブル「児童」を正規化する。
+
+児童番号	児童名	学年	保護者番号	保護者名	電話番号	メールアドレス	イベント番号	イベント名	開催日
+
+このテーブルの主キーが「児童番号」と「イベント番号」の複合キーであると考えると、表は第一正規形である。
+
+しかし、この表の各属性は主キー属性に対して完全関数従属ではないので、「イベント番号」に関数従属する属性と「児童番号」に関数従属する属性を別表に切り分けると、以下のテーブル構成となる。
+
+児童
+児童番号	児童名	学年	保護者番号	保護者名	電話番号	メールアドレス
+
+イベント
+イベント番号	イベント名	開催日
+
+活動
+児童番号	イベント番号
+
+
+次に、主キー以外の属性に対して関数従属している推移的関数従属属性を別表に切り分けると、上記児童テーブルは以下の二表に分かれる。
+
+保護者
+保護者番号	保護者名	電話番号	メールアドレス
+
+児童
+児童番号	児童名	学年	保護者番号
+
+
+設問２　正規化されたテーブル構成に関する次の操作を行うSQL文を答えよ。
+
+(1)　保護者表、児童表を作成するSQL文。学年は1以上6以下の数値が入る。
+
+CREATE TABLE 保護者(
+	保護者番号 number(4) PRIMARY KEY,
+	保護者名 varchar2(30) NOT NULL,
+	電話番号 varchar2(13) NOT NULL,
+	メールアドレス varchar2(256) NOT NULL,
+)
+
+CREATE TABLE 児童 (
+	児童番号 number(4) PRIMARY KEY,
+	児童名 varchar2(30) NOT NULL,
+	学年 number(1) NOT NULL,
+	保護者番号 number(4),
+	FOREIGN KEY (保護者番号) REFERENCES 保護者(保護者番号),
+	CHECK (学年 BETWEEN 1 AND 6)
+)
+
+CREATE TABLE イベント (
+	イベント番号 number(6) PRIMARY KEY,
+	イベント名 varchar2(90) NOT NULL,
+	開催日 date
+)
+
+CREATE TABLE 活動 (
+	児童番号 number(4),
+	イベント番号 number(6),
+	PRIMARY KEY (児童番号, イベント番号),
+	FOREIGN KEY (児童番号) REFERENCES 児童(児童番号),
+	FOREIGN KEY (イベント番号) REFERENCES イベント(イベント番号)
+)
+
+(2) イベント開催日が未定（NULL）であるイベントに参加予定の児童を抽出するSQL文
+
+SELECT 児童番号, 児童名, イベント番号, イベント名
+FROM 児童
+ INNER JOIN 活動 USING (児童番号)
+ INNER JOIN イベント USING (イベント番号)
+WHERE 開催日 IS NULL
+
+(3) 4年生を対象に実施する避難訓練の案内を保護者へ送るため、保護者の氏名とメールアドレスを抽出する。ここで同一の保護者は重複して抽出しないものとする。
+
+SELECT DISTINCT 保護者名, メールアドレス
+FROM 保護者 INNER JOIN 児童 USING(保護者番号)
+WHERE 学年 = 4
+
+(4) イベントごとの参加児童数を表示するSQL文
+
+SELECT イベント名, COUNT(*) 参加児童数
+FROM 活動 INNER JOIN イベント USING(イベント番号)
+GROUP BY イベント名
+
+(5) 今後開催されるイベントに参加予定の児童をイベントごとに表示するSQL文
+SELECT イベント名, NVL(TO_CHAR(開催日,'yyyy-MM-dd'),'未定') 開催日,
+LISTAGG (NVL(児童名, '参加者なし'), ', ') WITHIN GROUP (ORDER BY 児童番号)  参加児童名
+FROM 児童
+ INNER JOIN 活動 USING (児童番号)
+ RIGHT JOIN イベント USING (イベント番号)
+WHERE 開催日 > SYSDATE OR 開催日 IS NULL
+GROUP BY イベント名, NVL(TO_CHAR(開催日,'yyyy-MM-dd'),'未定')
+
+(6) 3月に6年生が卒業するので卒業生の情報を削除する。次に在校生を進級させる処理を行う。さらに卒業生の保護者の情報も削除する。
+
+DELETE FROM 児童 WHERE 学年 = 6
+UPDATE 児童 SET 学年 = 学年 + 1
+DELETE FROM 保護者 WHERE 保護者番号 NOT IN (SELECT 保護者番号 FROM 児童)
+
+
+
+問２　トランザクションに関する次の問に
+
+問３　データベースのインポート、エクスポートに関する
+

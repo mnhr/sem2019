@@ -1,0 +1,25 @@
+新規Javaプロジェクトの作成
+プロジェクト名「UnitTestSample」など
+
+［次へ］
+
+ソース　タブの中央ペインを右クリック「新規ソースフォルダ」
+フォルダ名「test」
+[完了]
+
+ライブラリー　タブの中央ペインで「クラスパス」を選択し
+[外部JARの追加] -> hamcrest-library-1.3.jar　を選択
+
+[ライブラリーの追加] -> JUnit　を選択　[次へ]
+JUnitライブラリー・バージョン「JUnit 4」を選択
+
+※両方ともクラスパスへ追加されたことを確認する
+
+[完了]
+
+UnitTestSampleプロジェクトのsrc、testフォルダにそれぞれパッケージ「ut」を作成する。
+配布ソースのドラッグアンドドロップ
+・UnitSample.javaはsrcフォルダのutパッケージへ
+・UnitSampleTest.javaはtestフォルダのutパッケージへ
+
+UnitSampleTest.java　を開いて、実行よりJUnitテストを選ぶ
